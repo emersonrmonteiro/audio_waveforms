@@ -264,6 +264,8 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   }
 
   void _addWaveformData(List<double> data) {
+    data.removeWhere((element) => element.isNaN);
+
     _waveformData
       ..clear()
       ..addAll(data);
