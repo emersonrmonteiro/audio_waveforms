@@ -259,9 +259,9 @@ class PlayerController extends ChangeNotifier {
   ///
   /// Minimum Android [O] is required to use this function
   /// otherwise nothing happens.
-  Future<void> seekTo(int progress) async {
+  Future<void> seekTo(int progress, {bool whenPlayingOnly = true}) async {
     if (progress < 0) return;
-    if (_playerState == PlayerState.playing) {
+    if (whenPlayingOnly == false || _playerState == PlayerState.playing) {
       await AudioWaveformsInterface.instance.seekTo(playerKey, progress);
     }
   }
