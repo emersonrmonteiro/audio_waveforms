@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:audio_waveforms/src/base/platform_streams.dart';
 import 'package:audio_waveforms/src/base/wave_clipper.dart';
 import 'package:audio_waveforms/src/painters/player_wave_painter.dart';
 import 'package:flutter/material.dart';
 
 import '../audio_waveforms.dart';
+import 'base/player_identifier.dart';
 
 class AudioFileWaveforms extends StatefulWidget {
   /// A size to define height and width of waveform.
@@ -287,21 +289,14 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   }
 
   void _handleDragGestures(DragUpdateDetails details) {
-    // pause player and update seek progress
-    if (widget.pauseOnSeekGesture) {
-      var seekPosition = widget.playerController.maxDuration * _proportion;
-      if (widget.playerController.playerState == PlayerState.playing) {
-        widget.playerController.pausePlayer();
-      }
-      _seekProgress.value = seekPosition.toInt();
-      _updatePlayerPercent(widget.size);
-    }
-
     switch (widget.waveformType) {
       case WaveformType.fitWidth:
         _handleScrubberSeekUpdate(details);
         break;
       case WaveformType.long:
+        var seekPosition = widget.playerController.maxDuration * _proportion;
+        _seekProgress.value = seekPosition.toInt();
+        _updatePlayerPercent(widget.size);
         _handleScrollUpdate(details);
         break;
     }
@@ -312,8 +307,16 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
     _proportion = details.localPosition.dx / widget.size.width;
     var seekPosition = widget.playerController.maxDuration * _proportion;
 
+    _seekProgress.value = seekPosition.toInt();
+    _updatePlayerPercent(widget.size);
+
+    var identifier = PlayerIdentifier<int>(
+        widget.playerController.playerKey, _seekProgress.value);
+    PlatformStreams.instance.addCurrentDurationEvent(identifier);
+
     widget.playerController.seekTo(seekPosition.toInt(),
         whenPlayingOnly: !widget.pauseOnSeekGesture);
+    _initialDragPosition = seekPosition;
   }
 
   /// This method handles tap seek gesture
@@ -321,8 +324,16 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
     _proportion = details.localPosition.dx / widget.size.width;
     var seekPosition = widget.playerController.maxDuration * _proportion;
 
+    _seekProgress.value = seekPosition.toInt();
+    _updatePlayerPercent(widget.size);
+
+    var identifier = PlayerIdentifier<int>(
+        widget.playerController.playerKey, _seekProgress.value);
+    PlatformStreams.instance.addCurrentDurationEvent(identifier);
+
     widget.playerController.seekTo(seekPosition.toInt(),
         whenPlayingOnly: !widget.pauseOnSeekGesture);
+    _initialDragPosition = seekPosition;
   }
 
   ///This method handles horizontal scrolling of the wave
